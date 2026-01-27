@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BONEDO Catch Game</title>
+    <style>
+        /* General styles for cute, pastel, cozy aesthetic */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8e8e8; /* Soft pastel pink background */
+            color: #5a4a4a; /* Warm brown text */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* Start screen styles */
+        #start-screen {
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #ff9aa2; /* Pastel pink */
+            margin-bottom: 20px;
+        }
+
+        .member-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .member-buttons button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-radius: 50%; /* Rounded buttons */
+            padding: 10px;
+            transition: transform 0.2s;
+        }
+
+        .member-buttons button:hover {
+            transform: scale(1.1);
+        }
+
+        .member-buttons img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+        }
+
+        /* Game screen styles */
+        #game-screen {
+            display: none;
+            text-align: center;
+            position: relative; /* For positioning audio controls */
+        }
+
+        #game-area {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            background-color: #fff5f5; /* Light pink game area */
+            border: 2px solid #ff9aa2;
+            border-radius: 10px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        #player {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+        }
+
+        /* Updated food styles: custom-shaped items like cute snacks */
+        .food {
+            position: absolute;
+            width: 40px; /* Wider for snack shape */
+            height: 20px; /* Shorter for oval/rectangle */
+            background: linear-gradient(45deg, #ffb3ba, #ffdfba); /* Pastel gradient for snack look */
+            border: 2px solid #ff9aa2; /* Soft border */
+            border-radius: 15px; /* Rounded for cute shape, not a circle */
+            top: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Soft shadow for depth */
+            transition: top 0.05s linear; /* Smooth falling animation */
+        }
+
+        #score {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #ff9aa2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 20px; /* Rounded buttons */
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #ff6b81;
+        }
+
+        /* Audio controls */
+        #audio-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #mute-btn {
+            background-color: #ff9aa2;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+
+        #mute-btn:hover {
+            background-color: #ff6b81;
+        }
+
+        #volume-slider {
+            width: 80px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 5px;
+            background: #ff9aa2;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #ff6b81;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        #volume-slider::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            background: #ff6b81;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Mobile-friendly adjustments */
+        @media (max-width: 600px) {
+            #game-area {
+                width: 90vw;
+                height: 70vh;
+            }
+
+            .member-buttons img {
+                width: 60px;
+                height: 60px;
+            }
+
+            #player {
+                width: 60px;
+                height: 60px;
+            }
+
+            .food {
+                width: 30px; /* Smaller on mobile */
+                height: 15px;
+            }
+
+            #audio-controls {
+                top: 5px;
+                right: 5px;
+            }
+
+            #volume-slider {
+                width: 60px;
+            }
+        }
+
+        /* Disclaimer */
+        .disclaimer {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Audio elements (hidden) -->
+    <!-- Background music: soft, cute, pastel-style, loops -->
+    <audio id="bgm" loop preload="auto" src="https://www.soundjay.com/misc/sounds/soft-background-music.mp3"></audio> <!-- Placeholder URL for background music -->
+    <!-- Catch sound effect -->
+    <audio id="catch-sound" preload="auto" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav"></audio> <!-- Placeholder URL for catch sound -->
+    <!-- Optional miss sound effect -->
+    <audio id="miss-sound" preload="auto" src="https://www.soundjay.com/misc/sounds/sad-trombone.mp3"></audio> <!-- Placeholder URL for miss sound -->
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1>BONEDO Catch Game</h1>
+        <div class="member-buttons">
+            <button data-member="taesan"><img src="https://raw.githubusercontent.com/daclara06-sudo/bonedo-game/main/assets/members/taesan.png" alt="Taesan"></button>
+            <button data-member="leehan"><img src="https://raw.githubusercontent.com/daclara06-sudo/bonedo-game/main/assets/members/leehan.png" alt="Leehan"></button>
+            <button data-member="jaehyun"><img src="https://raw.githubusercontent.com/daclara06-sudo/bonedo-game/main/assets/members/jaehyun.png" alt="Jaehyun"></button>
+            <button data-member="woonhak"><img src="https://raw.githubusercontent.com/daclara06-sudo/bonedo-game/main/assets/members/woonhak.png" alt="Woonhak"></button>
+            <button data-member="sungho"><img src="https://raw.githubusercontent.com/daclara06-sudo/bonedo-game/main/assets/members/sungho.png" alt="Sungho"></button>
+            <button data-member="riwoo"><img src="https://raw.githubusercontent.com/daclara06-sudo/bonedo-game/main/assets/members/riwoo.png" alt="Riwoo"></button>
+        </div>
+        <p class="disclaimer">This is a fanmade project by gnextdoor_id. Not affiliated with BOYNEXTDOOR.</p>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen">
+        <div id="audio-controls">
+            <button id="mute-btn">🎵</button> <!-- Music toggle button -->
+            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5"> <!-- Volume slider -->
+        </div>
+        <div id="score">Score: 0</div>
+        <div id="game-area">
+            <img id="player" src="" alt="Player">
+        </div>
+        <button id="left-btn">Left</button>
+        <button id="right-btn">Right</button>
+        <button id="restart-btn">Restart</button>
+        <button id="back-btn">Back to Selection</button>
+    </div>
+
+    <script>
+        // JavaScript for game logic
+
+        // Get elements
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const player = document.getElementById('player');
+        const gameArea = document.getElementById('game-area');
+        const scoreDisplay = document.getElementById('score');
+        const leftBtn = document.getElementById('left-btn');
+        const rightBtn = document.getElementById('right-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const backBtn = document.getElementById('back-btn');
+
+        // Audio elements
+        const bgm = document.getElementById('bgm'); // Background music
+        const catchSound = document.getElementById('catch-sound'); // Sound for catching food
+        const missSound = document.getElementById('miss-sound'); // Optional sound for missing food
+        const muteBtn = document.getElementById('mute-btn'); // Mute/unmute button
+        const volumeSlider = document.getElementById('volume-slider'); // Volume control slider
+
+        // Audio variables
+        let isMuted = false; // Track mute state (sound ON/OFF)
+
+        // Game variables
+        let selectedMember = '';
+        let score = 0;
+        let playerX = gameArea.offsetWidth / 2 - 40; // Center player initially
+        let foods = [];
+        let gameInterval;
+        let foodInterval;
+
+        // Member selection
+        document.querySelectorAll('.member-buttons button').forEach(button => {
+            button.addEventListener('click', () => {
+                selectedMember = button.getAttribute('data-member');
+                player.src = button.querySelector('img').src; // Set player image
+                startScreen.style.display = 'none';
+                gameScreen.style.display = 'block';
+                startGame();
+                // Start background music after user interaction (click), if sound is ON
+                if (!isMuted) {
+                    bgm.play().catch(e => console.log('Audio play failed:', e)); // Handle autoplay restrictions
+                }
+            });
+        });
+
+        // Start game function
+        function startGame() {
+            score = 0;
+            scoreDisplay.textContent = 'Score: 0';
+            playerX = gameArea.offsetWidth / 2 - 40;
+            player.style.left = playerX + 'px';
+            foods = [];
+            // Clear any existing foods
+            document.querySelectorAll('.food').forEach(food => food.remove());
+
+            // Game loop: update every 50ms
+            gameInterval = setInterval(updateGame, 50);
+            // Spawn food every 1 second
+            foodInterval = setInterval(spawnFood, 1000);
+        }
+
+        // Update game function (move foods, check collisions)
+        function updateGame() {
+            // Move foods down
+            foods.forEach((food, index) => {
+                food.y += 5; // Fall speed
+                food.element.style.top = food.y + 'px';
+
+                // Check if food is caught (simple collision detection)
+                const playerRect = player.getBoundingClientRect();
+                const foodRect = food.element.getBoundingClientRect();
+                if (foodRect.bottom >= playerRect.top &&
+                    foodRect.top <= playerRect.bottom &&
+                    foodRect.right >= playerRect.left &&
+                    foodRect.left <= playerRect.right) {
+                    // Caught!
+                    score++;
+                    scoreDisplay.textContent = 'Score: ' + score;
+                    food.element.remove();
+                    foods.splice(index, 1);
+                    // Play catch sound effect if not muted
+                    if (!isMuted) {
+                        catchSound.currentTime = 0; // Reset to start
+                        catchSound.play().catch(e => console.log('Catch sound play failed:', e));
+                    }
+                } else if (food.y > gameArea.offsetHeight) {
+                    // Missed
+                    food.element.remove();
+                    foods.splice(index, 1);
+                    // Optional: Play miss sound if not muted
+                    if (!isMuted) {
+                        missSound.currentTime = 0; // Reset to start
+                        missSound.play().catch(e => console.log('Miss sound play failed:', e));
+                    }
+                }
+            });
+        }
+
+        // Spawn food function
+        function spawnFood() {
+            const food = document.createElement('div');
+            food.className = 'food';
+            food.style.left = Math.random() * (gameArea.offsetWidth - 40) + 'px'; // Random x position, adjusted for new width
+            gameArea.appendChild(food);
+            foods.push({ element: food, y: 0 });
+        }
+
+        // Player movement
+        function movePlayer(direction) {
+            if (direction === 'left' && playerX > 0) {
+                playerX -= 20;
+            } else if (direction === 'right' && playerX < gameArea.offsetWidth - 80) {
+                playerX += 20;
+            }
+            player.style.left = playerX + 'px';
+        }
+
+        // Button controls
+        leftBtn.addEventListener('click', () => movePlayer('left'));
+        rightBtn.addEventListener('click', () => movePlayer('right'));
+
+        // Keyboard controls (optional, for desktop)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                movePlayer('left');
+            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                movePlayer('right');
+            }
+        });
+
+        // Restart game
+        restartBtn.addEventListener('click', () => {
+            clearInterval(gameInterval);
+            clearInterval(foodInterval);
+            startGame();
+        });
+
+        // Back to selection
+        backBtn.addEventListener('click', () => {
+            clearInterval(gameInterval);
+            clearInterval(foodInterval);
+            gameScreen.style.display = 'none';
+            startScreen.style.display = 'block';
+            // Stop background music when going back
+            bgm.pause();
+            bgm.currentTime = 0;
+        });
+
+        // Audio controls
+        // Mute/unmute button (connected to background music and sound effects)
+        muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            muteBtn.textContent = isMuted ? '🔇' : '🎵'; // Change emoji
+            if (isMuted) {
+                bgm.pause(); // Pause music when sound OFF
+            } else {
+                bgm.play().catch(e => console.log('BGM play failed:', e)); // Play/resume music when sound ON
+            }
+            // Also mute/unmute sound effects
+            catchSound.muted = isMuted;
+            missSound.muted = isMuted;
+        });
+
+        // Volume slider
+        volumeSlider.addEventListener('input', () => {
+            const volume = volumeSlider.value;
+            bgm.volume = volume;
+            catchSound.volume = volume;
+            missSound.volume = volume;
+        });
+
+        // Initialize volume
+        bgm.volume = volumeSlider.value;
+        catchSound.volume = volumeSlider.value;
+        missSound.volume = volumeSlider.value;
+    </script>
+</body>
+</html>
