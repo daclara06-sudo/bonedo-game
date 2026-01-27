@@ -1,5 +1,5 @@
 bonedo-game
-├── index.html   ← WAJIB ADA DI SINI
+├── index.html  
 ├── bgm.mp3
 ├── tomat.png
 ├── assets/
